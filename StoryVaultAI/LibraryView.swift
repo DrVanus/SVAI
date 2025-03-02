@@ -8,63 +8,55 @@
 import SwiftUI
 
 struct LibraryView: View {
-    @EnvironmentObject var library: LibraryModel
-    
     var body: some View {
         NavigationView {
-            ZStack {
-                // Subtle background color
-                Color(uiColor: .systemGroupedBackground)
-                    .edgesIgnoringSafeArea(.all)
-                
-                if library.savedStories.isEmpty {
-                    Text("No saved stories yet")
-                        .foregroundColor(.secondary)
-                } else {
-                    List {
-                        ForEach($library.savedStories) { $item in
-                            NavigationLink(destination: LibraryDetailView(item: $item)) {
-                                LibraryRow(item: item)
-                            }
-                            .swipeActions {
-                                Button(role: .destructive) {
-                                    if let index = library.savedStories.firstIndex(where: { $0.id == item.id }) {
-                                        library.savedStories.remove(at: index)
-                                    }
-                                } label: {
-                                    Label("Remove", systemImage: "trash")
-                                }
-                            }
-                        }
-                    }
-                    .listStyle(.insetGrouped)
-                    .scrollContentBackground(.hidden) // iOS 16+
-                }
-            }
-            .navigationTitle("Library")
+            someView
+                .navigationTitle("Library")
+                .navigationViewStyle(StackNavigationViewStyle())
         }
-        .navigationViewStyle(StackNavigationViewStyle())
+    }
+    
+    private var someView: some View {
+        List {
+            // Add your library items here
+        }
     }
 }
 
 struct LibraryRow: View {
-    let item: LibraryItem
+    let story: LibraryModel.SavedStory
     
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "book.circle.fill")
-                .resizable()
-                .frame(width: 40, height: 40)
-                .foregroundColor(.brandPrimary)
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(item.title)
-                    .font(.headline)
-                ProgressView(value: item.readingProgress, total: 1.0)
-                    .progressViewStyle(LinearProgressViewStyle(tint: .brandPrimary))
-                    .frame(width: 120)
-            }
+        HStack {
+            Text(story.title)
+                .foregroundColor(.white)
+            Spacer()
+            Text(story.genre)
+                .foregroundColor(.gray)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 8)
+    }
+}
+
+struct LibraryDetailView: View { // Ensure this is not redefined elsewhere
+    let story: LibraryModel.SavedStory
+    
+    var body: some View {
+        Text("Details for `\(story.title)")
+            .foregroundColor(.white)
+            .padding()
+            .background(Color.black.edgesIgnoringSafeArea(.all))
+            .navigationTitle(story.title)
+    }
+}
+
+// Ensure LibraryDetailView is not redefined elsewhere in the file
+// Remove any duplicate definitions of LibraryDetailView if they exist
+
+struct LibraryView_Previews: PreviewProvider {
+    static var previews: some View {
+        LibraryView()
+            .preferredColorScheme(.dark)
+            .environmentObject(LibraryModel())
     }
 }

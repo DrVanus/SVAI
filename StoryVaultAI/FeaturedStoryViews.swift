@@ -7,55 +7,35 @@
 
 import SwiftUI
 
-// MARK: - Data Model for Featured Stories
-struct FeaturedStory: Identifiable {
-    let id = UUID()
-    let title: String
-    let imageName: String
-    let description: String
+struct FeaturedLibraryDetailView: View { // Renamed from LibraryDetailView
+    @Binding var item: LibraryItem
+
+    var body: some View {
+        VStack {
+            // Background ring
+            .background(Color.brandPrimary.opacity(0.2))
+            .cornerRadius(12)
+            Text(item.title)
+                .foregroundColor(.white)
+            Text(item.description)
+                .foregroundColor(.white)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 8)
+            Button("Add to Library") {
+                item.readingProgress = 1.0
+                library.addStory(title: item.title, genre: item.genre) // Updated to include genre
+            }
+            .tint(.brandPrimary)
+            .padding()
+            .navigationBarTitle(item.title, displayMode: .inline)
+        }
+    }
 }
 
-// MARK: - Featured Story Detail View
-struct FeaturedStoryDetailView: View {
-    @EnvironmentObject var library: LibraryModel
-    let story: FeaturedStory
-    
-    var body: some View {
-        ZStack {
-            LinearGradient(
-                gradient: Gradient(colors: [.black, .indigo]),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
-            
-            VStack(spacing: 16) {
-                Image(systemName: story.imageName)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 100, height: 100)
-                    .foregroundColor(.white)
-                    .background(Color.brandPrimary.opacity(0.2))
-                    .cornerRadius(12)
-                
-                Text(story.title)
-                    .font(.title2.bold())
-                    .foregroundColor(.white)
-                
-                Text(story.description)
-                    .font(.body)
-                    .foregroundColor(.white.opacity(0.9))
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-                
-                Button("Add to Library") {
-                    library.addStory(title: story.title)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(.brandPrimary)
-            }
-            .padding()
-        }
-        .navigationBarTitle(story.title, displayMode: .inline)
+struct FeaturedLibraryDetailView_Previews: PreviewProvider {
+    static var previews: some View {
+        FeaturedLibraryDetailView(item: .constant(LibraryItem(title: "Sample Story", description: "Sample description", readingProgress: 0.5, genre: "Fantasy"))) // Added genre for preview
+            .preferredColorScheme(.dark)
+            .environmentObject(LibraryModel())
     }
 }

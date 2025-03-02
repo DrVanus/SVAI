@@ -8,153 +8,244 @@
 import SwiftUI
 
 struct HomeView: View {
-    @EnvironmentObject var library: LibraryModel
-
-    @State private var rowWidthFantasy: CGFloat = 0
-    @State private var rowWidthAdventure: CGFloat = 0
-    @State private var rowWidthHorror: CGFloat = 0
-    @State private var rowWidthRomance: CGFloat = 0
-
-    let fantasyBooks: [FeaturedStory] = [
-        FeaturedStory(title: "Alice’s Adventures in Wonderland", imageName: "book.fill", description: "Whimsical classic by Lewis Carroll"),
-        FeaturedStory(title: "The Wonderful Wizard of Oz", imageName: "book.fill", description: "Dorothy’s journey in Oz"),
-        FeaturedStory(title: "Peter Pan", imageName: "book.fill", description: "Neverland adventures"),
-        FeaturedStory(title: "Grimm’s Fairy Tales", imageName: "book.fill", description: "Classic fairy tales")
+    // Define your book data structure, conforming to Equatable
+    struct Book: Equatable { // Added Equatable conformance
+        let title: String
+        let genre: String
+        let coverImage: String // Name of the image in Assets.xcassets (e.g., "cover_alice_wonderland_home")
+        
+        // Implement Equatable by defining ==
+        static func ==(lhs: Book, rhs: Book) -> Bool {
+            return lhs.title == rhs.title &&
+                   lhs.genre == rhs.genre &&
+                   lhs.coverImage == rhs.coverImage
+        }
+    }
+    
+    // Sample book data for featured stories (replace with your actual featured books)
+    let featuredBooks: [Book] = [
+        Book(title: "Alice's Adventures in Wonderland", genre: "Fantasy", coverImage: "cover_alice_wonderland_home"),
+        Book(title: "The Wonderful Wizard of Oz", genre: "Fantasy", coverImage: "cover_wizard_of_oz_home"),
+        Book(title: "Dracula", genre: "Horror/Gothic", coverImage: "cover_dracula_home")
     ]
     
-    let adventureBooks: [FeaturedStory] = [
-        FeaturedStory(title: "Treasure Island", imageName: "book.fill", description: "Pirate adventure"),
-        FeaturedStory(title: "The Count of Monte Cristo", imageName: "book.fill", description: "Betrayal & revenge"),
-        FeaturedStory(title: "The Odyssey", imageName: "book.fill", description: "Epic Greek journey"),
-        FeaturedStory(title: "Robinson Crusoe", imageName: "book.fill", description: "Desert island survival")
-    ]
-    
-    let horrorBooks: [FeaturedStory] = [
-        FeaturedStory(title: "Dracula", imageName: "book.fill", description: "Seminal vampire horror"),
-        FeaturedStory(title: "Frankenstein", imageName: "book.fill", description: "Gothic sci‑fi by Mary Shelley"),
-        FeaturedStory(title: "Carmilla", imageName: "book.fill", description: "Atmospheric vampire story"),
-        FeaturedStory(title: "Jekyll and Hyde", imageName: "book.fill", description: "Dark dual personality tale")
-    ]
-    
-    let romanceBooks: [FeaturedStory] = [
-        FeaturedStory(title: "Pride and Prejudice", imageName: "book.fill", description: "Jane Austen’s witty romance"),
-        FeaturedStory(title: "Jane Eyre", imageName: "book.fill", description: "Strong-willed governess story"),
-        FeaturedStory(title: "Wuthering Heights", imageName: "book.fill", description: "Passionate love on the moors"),
-        FeaturedStory(title: "Little Women", imageName: "book.fill", description: "Coming-of-age of four sisters")
-    ]
+    // State for controlling the preview pop-up
+    @State private var showPreview = false
+    @State private var selectedBook: Book?
     
     var body: some View {
         NavigationView {
-            ZStack {
-                DynamicDarkGradientBackground()
-                // Optional top wave shape
-                VStack {
-                    TopWaveShape()
-                        .fill(Color.white.opacity(0.1))
-                        .frame(height: 160)
-                        .offset(y: -80)
-                    Spacer()
-                }
-                .edgesIgnoringSafeArea(.top)
-                
-                ScrollView {
-                    VStack(spacing: 24) {
-                        Spacer().frame(height: 20)
-                        
-                        VStack(spacing: 8) {
-                            Text("StoryVault AI")
-                                .font(.largeTitle.bold())
-                                .foregroundColor(.white)
-                            Text("Unlock Your Imagination")
-                                .font(.title3)
-                                .foregroundColor(.white.opacity(0.8))
-                        }
-                        
-                        NavigationLink(destination: WriteYourOwnStoryView()) {
-                            Text("Write Your Own Story")
-                        }
-                        .buttonStyle(LuxuryButtonStyle())
-                        .shadow(color: Color.black.opacity(0.4), radius: 6, x: 0, y: 3)
-                        
-                        if let _ = library.lastSegmentID,
-                           let lastItem = library.savedStories.last {
-                            Text("Recently Read")
-                                .font(.subheadline)
-                                .foregroundColor(.white)
-                            HStack(spacing: 12) {
-                                Text(lastItem.title)
-                                    .foregroundColor(.white)
-                                Button("Continue") {
-                                    // Navigation action
+            ScrollView {
+                VStack(spacing: 20) {
+                    // Featured Stories Carousel with Animations
+                    TabView {
+                        ForEach(featuredBooks, id: \.title) { book in
+                            FeaturedBookView(book: book)
+                                .onTapGesture {
+                                    selectedBook = book
+                                    showPreview = true
                                 }
-                                .font(.caption).bold()
-                                .buttonStyle(BorderlessButtonStyle())
-                                .padding(4)
-                                .background(Color.brandPrimary)
-                                .foregroundColor(.white)
-                                .cornerRadius(8)
-                            }
                         }
-                        
-                        NavigationLink(destination: BeowulfAdventureView()) {
-                            Text("AI Adventure (Beta)")
-                                .font(.body)
-                                .foregroundColor(.white)
-                                .underline()
-                        }
-                        
-                        VStack(alignment: .leading, spacing: 20) {
-                            Group {
-                                Text("Fantasy")
-                                    .font(.headline)
-                                    .foregroundColor(.white)
-                                FeaturedStoriesRowView(stories: fantasyBooks, rowWidth: $rowWidthFantasy)
-                                    .frame(height: 120)
-                                    .environmentObject(library)
-                            }
-                            
-                            Group {
-                                Text("Adventure")
-                                    .font(.headline)
-                                    .foregroundColor(.white)
-                                FeaturedStoriesRowView(stories: adventureBooks, rowWidth: $rowWidthAdventure)
-                                    .frame(height: 120)
-                                    .environmentObject(library)
-                            }
-                            
-                            Group {
-                                Text("Horror / Gothic")
-                                    .font(.headline)
-                                    .foregroundColor(.white)
-                                FeaturedStoriesRowView(stories: horrorBooks, rowWidth: $rowWidthHorror)
-                                    .frame(height: 120)
-                                    .environmentObject(library)
-                            }
-                            
-                            Group {
-                                Text("Romance")
-                                    .font(.headline)
-                                    .foregroundColor(.white)
-                                FeaturedStoriesRowView(stories: romanceBooks, rowWidth: $rowWidthRomance)
-                                    .frame(height: 120)
-                                    .environmentObject(library)
-                            }
-                        }
-                        
-                        Spacer().frame(height: 60)
                     }
-                    .padding(.horizontal, 30)
+                    .tabViewStyle(PageTabViewStyle())
+                    .frame(height: 450)
+                    .indexViewStyle(PageIndexViewStyle(backgroundDisplayMode: .always))
+                    .animation(.easeInOut, value: featuredBooks)
+                    
+                    // AI Adventure (Beta) Section
+                    VStack(spacing: 10) {
+                        Text("AI Adventure (Beta)")
+                            .foregroundColor(.white)
+                            .font(.headline)
+                        NavigationLink(destination: AIBetaAdventureView()) {
+                            Text("Try the Beta Experience")
+                                .foregroundColor(.white)
+                                .padding()
+                                .background(Color.purple.opacity(0.7))
+                                .cornerRadius(10)
+                        }
+                    }
+                    .padding(.horizontal)
+                    
+                    // "Write Your Own Story" Button
+                    NavigationLink(destination: WriteYourOwnStoryView()) {
+                        Text("Write Your Own Story")
+                            .foregroundColor(.white)
+                            .padding()
+                            .background(Color.purple.opacity(0.7))
+                            .cornerRadius(10)
+                    }
+                    .padding()
+                    
+                    // "View All" Button to Navigate to Marketplace
+                    NavigationLink(destination: MarketplaceView()) {
+                        Text("View All Stories")
+                            .foregroundColor(.white)
+                            .padding()
+                            .background(Color.purple.opacity(0.7))
+                            .cornerRadius(10)
+                    }
+                    .padding()
+                    
+                    // Genre Quick Links
+                    HStack(spacing: 10) {
+                        ForEach(["Fantasy", "Adventure", "Horror/Gothic", "Romance"], id: \.self) { genre in
+                            NavigationLink(destination: BooksByGenreView(genre: genre)) {
+                                Text(genre)
+                                    .foregroundColor(.white)
+                                    .padding()
+                                    .background(Color.purple.opacity(0.7))
+                                    .cornerRadius(10)
+                            }
+                        }
+                    }
+                    .padding()
+                    
+                    // Placeholder for Recent Activity or Achievements
+                    Text("Recent Activity & Achievements Coming Soon")
+                        .foregroundColor(.white)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color.black.opacity(0.8))
+                        .cornerRadius(10)
+                }
+                .padding()
+            }
+            .background(Color.black.edgesIgnoringSafeArea(.all))
+            .navigationTitle("StoryVault AI")
+            .sheet(isPresented: $showPreview) {
+                if let book = selectedBook {
+                    PreviewView(book: book)
                 }
             }
-            .navigationBarHidden(true)
         }
-        .navigationViewStyle(StackNavigationViewStyle())
     }
 }
 
-struct HomeView_Previews: PreviewProvider {
-    static var previews: some View {
-        HomeView()
-            .environmentObject(LibraryModel())
+// Custom view for each featured book in the carousel, with animations
+struct FeaturedBookView: View {
+    let book: HomeView.Book
+    
+    var body: some View {
+        Group {
+            if let uiImage = UIImage(named: book.coverImage) {
+                VStack {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 300, height: 450)
+                        .cornerRadius(12)
+                        .scaleEffect(1.0) // Base scale for animation
+                        .animation(.easeInOut(duration: 0.3), value: uiImage)
+                    Text(book.title)
+                        .foregroundColor(.white)
+                        .font(.title2)
+                        .padding()
+                }
+            } else {
+                Rectangle()
+                    .fill(Color.gray)
+                    .frame(width: 300, height: 450)
+                    .cornerRadius(12)
+                    .overlay(Text("No Cover").foregroundColor(.white))
+            }
+        }
+        .onAppear {
+            if UIImage(named: book.coverImage) == nil {
+                print("Failed to load image: \(book.coverImage)")
+            }
+        }
+    }
+}
+
+// Preview view for showing a sample AI interaction
+struct PreviewView: View {
+    let book: HomeView.Book
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 20) {
+                Text("Preview: \(book.title)")
+                    .foregroundColor(.white)
+                    .font(.title)
+                    .padding()
+                
+                // Sample AI Interaction (Placeholder for choice-based narrative)
+                Text("Choose your path in this AI adventure:")
+                    .foregroundColor(.white)
+                    .font(.headline)
+                
+                VStack(spacing: 10) {
+                    Button("Explore the Rabbit Hole") {
+                        // Placeholder for AI logic
+                        print("Selected: Explore the Rabbit Hole for \(book.title)")
+                    }
+                    .foregroundColor(.white)
+                    .padding()
+                    .background(Color.purple.opacity(0.7))
+                    .cornerRadius(10)
+                    
+                    Button("Follow the White Rabbit") {
+                        // Placeholder for AI logic
+                        print("Selected: Follow the White Rabbit for \(book.title)")
+                    }
+                    .foregroundColor(.white)
+                    .padding()
+                    .background(Color.purple.opacity(0.7))
+                    .cornerRadius(10)
+                    
+                    Button("Stay Above Ground") {
+                        // Placeholder for AI logic
+                        print("Selected: Stay Above Ground for \(book.title)")
+                    }
+                    .foregroundColor(.white)
+                    .padding()
+                    .background(Color.purple.opacity(0.7))
+                    .cornerRadius(10)
+                }
+                .padding()
+                
+                Button("Close Preview") {
+                    // Dismiss the preview (handled by sheet)
+                }
+                .foregroundColor(.white)
+                .padding()
+                .background(Color.red.opacity(0.7))
+                .cornerRadius(10)
+            }
+            .background(Color.black.edgesIgnoringSafeArea(.all))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Close") {
+                        // Dismiss the preview (handled by sheet)
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Placeholder view for AI Adventure (Beta)
+struct AIBetaAdventureView: View {
+    var body: some View {
+        Text("AI Adventure Beta Experience")
+            .foregroundColor(.white)
+            .padding()
+            .background(Color.black.edgesIgnoringSafeArea(.all))
+            .navigationTitle("AI Adventure (Beta)")
+    }
+}
+
+// Placeholder view for books by genre (to be implemented fully later)
+struct BooksByGenreView: View {
+    let genre: String
+    
+    var body: some View {
+        Text("Books in \(genre)")
+            .foregroundColor(.white)
+            .padding()
+            .background(Color.black.edgesIgnoringSafeArea(.all))
+            .navigationTitle(genre)
     }
 }

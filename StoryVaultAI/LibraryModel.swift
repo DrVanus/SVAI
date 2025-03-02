@@ -7,27 +7,21 @@
 
 import SwiftUI
 
-/// Each saved story in the library
-struct LibraryItem: Identifiable {
-    let id = UUID()
-    var title: String
-    var readingProgress: Double // 0...1
-}
-
 class LibraryModel: ObservableObject {
-    /// We store LibraryItem (not just String),
-    /// so we can have reading progress and a 'title' property.
-    @Published var savedStories: [LibraryItem] = []
+    @Published var savedStories: [SavedStory] = []
     
-    /// If you want to remember the last story segment ID the user visited
-    @Published var lastSegmentID: String? = nil
+    struct SavedStory: Identifiable {
+        let id = UUID()
+        let title: String
+        let genre: String
+    }
     
-    /// Add a new story by title if it's not already in the library
-    func addStory(title: String) {
-        // Check if we already have an item with this title
-        if !savedStories.map({ $0.title }).contains(title) {
-            let newItem = LibraryItem(title: title, readingProgress: 0.0)
-            savedStories.append(newItem)
-        }
+    func addStory(title: String, genre: String) {
+        let newStory = SavedStory(title: title, genre: genre)
+        savedStories.append(newStory)
+    }
+    
+    func removeStory(at offsets: IndexSet) {
+        savedStories.remove(atOffsets: offsets)
     }
 }
